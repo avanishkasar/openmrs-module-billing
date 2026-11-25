@@ -287,9 +287,11 @@ public class Bill extends BaseOpenmrsData {
 			} else {
 				this.setStatus(BillStatus.POSTED);
 			}
-		} else if (current == BillStatus.PAID && getAmountAfterDiscount().compareTo(BigDecimal.ZERO) > 0) {
+		} else if ((current == BillStatus.PAID || current == BillStatus.POSTED)
+		        && getAmountAfterDiscount().compareTo(BigDecimal.ZERO) > 0) {
 			// Every payment that settled this bill has since been voided or removed, so nothing is
-			// paid any more. Reopen the bill and the line items the settlement had marked as paid.
+			// paid any more. Reopen the bill and the line items the settlement had marked as paid,
+			// also when an earlier reversal already moved the bill back to POSTED.
 			this.setStatus(BillStatus.POSTED);
 			if (this.lineItems != null) {
 				for (BillLineItem lineItem : this.lineItems) {
