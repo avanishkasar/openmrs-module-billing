@@ -285,7 +285,10 @@ public class Bill extends BaseOpenmrsData {
 					}
 				}
 			} else {
+				// The payments left no longer cover the bill, so line items an earlier settlement
+				// marked as paid are not paid any more.
 				this.setStatus(BillStatus.POSTED);
+				reopenPaidLineItems();
 			}
 		} else if ((current == BillStatus.PAID || current == BillStatus.POSTED)
 		        && getAmountAfterDiscount().compareTo(BigDecimal.ZERO) > 0) {
@@ -293,11 +296,15 @@ public class Bill extends BaseOpenmrsData {
 			// paid any more. Reopen the bill and the line items the settlement had marked as paid,
 			// also when an earlier reversal already moved the bill back to POSTED.
 			this.setStatus(BillStatus.POSTED);
-			if (this.lineItems != null) {
-				for (BillLineItem lineItem : this.lineItems) {
-					if (lineItem != null && !lineItem.getVoided() && lineItem.getStatus() == BillLineItemStatus.PAID) {
-						lineItem.setStatus(BillLineItemStatus.PENDING);
-					}
+			reopenPaidLineItems();
+		}
+	}
+	
+	private void reopenPaidLineItems() {
+		if (this.lineItems != null) {
+			for (BillLineItem lineItem : this.lineItems) {
+				if (lineItem != null && !lineItem.getVoided() && lineItem.getStatus() == BillLineItemStatus.PAID) {
+					lineItem.setStatus(BillLineItemStatus.PENDING);
 				}
 			}
 		}

@@ -244,6 +244,36 @@ public class BillTest {
 	}
 	
 	@Test
+	public void synchronizeBillStatus_shouldReopenLineItemsWhenTheRemainingPaymentsNoLongerCoverTheBill() {
+		Bill bill = new Bill();
+		bill.setLineItems(new ArrayList<>());
+		bill.setPayments(new HashSet<>());
+		
+		BillLineItem lineItem = new BillLineItem();
+		lineItem.setPrice(BigDecimal.valueOf(100));
+		lineItem.setQuantity(1);
+		lineItem.setVoided(false);
+		bill.getLineItems().add(lineItem);
+		
+		Payment first = new Payment();
+		first.setAmountTendered(BigDecimal.valueOf(60));
+		first.setVoided(false);
+		bill.addPayment(first);
+		Payment second = new Payment();
+		second.setAmountTendered(BigDecimal.valueOf(40));
+		second.setVoided(false);
+		bill.addPayment(second);
+		assertEquals(BillStatus.PAID, bill.getStatus());
+		assertEquals(BillLineItemStatus.PAID, lineItem.getStatus());
+		
+		second.setVoided(true);
+		bill.synchronizeBillStatus();
+		
+		assertEquals(BillStatus.POSTED, bill.getStatus());
+		assertEquals(BillLineItemStatus.PENDING, lineItem.getStatus());
+	}
+	
+	@Test
 	public void synchronizeBillStatus_shouldLeaveVoidedAndRefundedLineItemsAloneWhenReopeningBill() {
 		Bill bill = new Bill();
 		bill.setLineItems(new ArrayList<>());
